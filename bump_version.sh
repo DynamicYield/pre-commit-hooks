@@ -8,12 +8,20 @@ while test $# -gt 0; do
             echo "options:"
             echo "-h, --help            show brief help"
             echo "--version-file        set the name of the version file to bump"
+            echo "--remote-branch       set the name of the remote branch to diff against"
             exit 0
             ;;
         --version-file)
             shift
             if test $# -gt 0; then
                 export version_file=$1
+            fi
+            shift
+            ;;
+        --remote-branch)
+            shift
+            if test $# -gt 0; then
+                export remote_branch=$1
             fi
             shift
             ;;
@@ -25,6 +33,11 @@ done
 
 if [[ -z "$version_file" ]]; then
     echo "version-file flag must be set" 1>&2
+    exit 1
+fi
+
+if [[ -z "$remote_branch" ]]; then
+    echo "remote-branch flag must be set" 1>&2
     exit 1
 fi
 
@@ -63,7 +76,7 @@ processed_dirs=()
 
 for file in "$@"; do
 
-    # check if file is staged
+    # check if file is staged to prevent false-positive bumping during pre-commit run all-files
     if ! git diff --exit-code --quiet --cached "$file"; then
 
         version_dir=$(check_dirs "$file")
@@ -72,11 +85,11 @@ for file in "$@"; do
         if ! contains_element "$version_dir" "${processed_dirs[@]}"; then
 
             if [[ -f "$version_dir/$version_file" ]]; then
-                # check if version file was modified since origin/HEAD
-                if git diff --exit-code --quiet origin/HEAD "$version_dir/$version_file"; then
+                # check if version file was modified since remote head commit
+                if git diff --exit-code --quiet $remote_branch "$version_dir/$version_file"; then
                     bump2version --allow-dirty --current-version "$(grep -Eo "$semver_regex" "$version_dir/$version_file")" patch "$version_dir/$version_file"
                     bumped_version="true"
-                    # include bumped file in the staged changes
+                    # add bumped version file to the staged changes to make sure it's commited
                     git add "$version_dir/$version_file"
                     echo "bumped $version_dir/$version_file"
                 fi

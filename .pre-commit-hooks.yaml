@@ -1,8 +1,8 @@
 - id: bump-version
   name: Bump version
   description: Bump version file when code changes
-  entry: hooks/bump_version.sh
-  language: script
-  exclude: (.github/)|(README.md)|(LICENSE)|(.pre-commit-config.yaml)|(.yamllint.yaml)
+  entry: /bin/bash /bumpversion/bump_version.sh
+  language: docker
+  exclude: (.github/)|(README.md)|(LICENSE)|(.gitignore)|(.pre-commit-config.yaml)|(.yamllint.yaml)|(.markdownlint.yaml)
   require_serial: true
-    
+  
