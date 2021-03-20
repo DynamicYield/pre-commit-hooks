@@ -76,8 +76,8 @@ processed_dirs=()
 
 for file in "$@"; do
 
-    # check if file is staged to prevent false-positive bumping during pre-commit run all-files
-    if ! git diff --exit-code --quiet --cached "$file"; then
+    # check if file was modified since remote head commit to prevent false-positive bumping during pre-commit run all-files
+    if ! git diff --exit-code --quiet $remote_branch "$file"; then
 
         version_dir=$(check_dirs "$file")
 
